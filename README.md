@@ -4,7 +4,32 @@ This study was done using Python >3.11.9, please guarantee python version before
 
 ## 📥 Downloading data
 
-The dataset used for training was [NDB-UFES: An oral cancer and leukoplakia dataset composed of histopathological images and patient data](https://data.mendeley.com/datasets/bbmmm4wgr8/4), curated by Maria Clara Falcão Ribeiro de Assis, Leandro Muniz de Lima, Liliana Aparecida Pimenta de Barros, Tânia Regina Velloso, Renato Krohling, Danielle Camisasca. Published in March 16, 2023. Mendeley Data, V4 , doi: https://doi.org/10.17632/bbmmm4wgr8.4. The format used was obtained by Labcin instead of the format available at mendeley, this is so that the original image names can be used. The original image names contain the parent image name, having this information is vital to guarantee that no contamination is made during train/test splits. 
+The dataset used for training was [NDB-UFES: An oral cancer and leukoplakia dataset composed of histopathological images and patient data](https://data.mendeley.com/datasets/bbmmm4wgr8/4), curated by Maria Clara Falcão Ribeiro de Assis, Leandro Muniz de Lima, Liliana Aparecida Pimenta de Barros, Tânia Regina Velloso, Renato Krohling, Danielle Camisasca. Published in March 16, 2023. Mendeley Data, V4 , doi: https://doi.org/10.17632/bbmmm4wgr8.4. 
+
+In order to use the images, the directory `data` was created at the roo of the repositoruy. The folder `images` and the file `ndb-ufes.csv` obtaind from mendeley was moved to `data`. For the patches images, the data used was obtained by Labcin instead of the format available at mendeley, this is so that the original image names can be used. The original image names contain the parent image name, having this information is vital to guarantee that no contamination is made during train/test splits. 
+
+The data directory contained the following format:
+```
+data
+|---- images
+|      |-- image.png
+|      |-- image.png
+|      |-- ...
+|---- patches
+|      |-- carcinoma
+|      |    |-- image.png
+|      |    |-- image.png
+|      |    |-- ....png
+|      |-- no_dysplasia
+|      |    |-- image.png
+|      |    |-- image.png
+|      |    |-- ....png
+|      |-- dysplasia
+|      |    |-- image.png
+|      |    |-- image.png
+|      |    |-- ....png
+|---- ndb-ufes
+```
 
 The dataset used for test was [Histopathological imaging database for Oral Cancer analysis](https://data.mendeley.com/datasets/ftmp4cvtmb/2), curated by Tabassum Yesmin Rahman, Lipi B. Mahanta, Anup K. Das, Jagannath D. Sarma. Published in January 9, 2023. Mendeley Data, V1, doi: 10.17632/ftmp4cvtmb.2
 
@@ -31,6 +56,11 @@ Before installing dependencies via terminal, guarantee that the tag `{virtual_en
 pip install -r requirements.txt
 ```
 
+PyTorch was used in this project. While it's included in the requirements, I recommend following [PyTorch's how to install guide](https://pytorch.org/), substituing with the versions included in the requirements. This way you can guarantee it's compatible with your CUDA version. For example:
+
+```sh
+pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
+```
 ## Chapters
 
 ### Research phase
