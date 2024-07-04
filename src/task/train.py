@@ -1,12 +1,16 @@
 import os
 import pathlib as pl
+import copy
 
 import pandas as pd
+import numpy as np
+import torch
 from torch.utils.data import DataLoader
 
 import wandb
 
 from sklearn.metrics import recall_score, precision_score, f1_score, accuracy_score
+from sklearn.utils.class_weight import compute_class_weight
 
 from src.pipeline import train, test
 
@@ -18,21 +22,23 @@ from src.data import DatasetSelector
 from src.logger import logger
 
 class TrainTask:
-    def __init__(self, model_selector, optimizer_selector, loss_selector, dataset_selector, epochs, batch_size, k_folds, save_path):
+    def __init__(self, model_selector, optimizer_selector, loss_name, use_loss_weights, dataset, epochs, batch_size, k_folds, save_path, device):
         self.model_selector = model_selector
         self.optimizer_selector = optimizer_selector
-        self.loss_selector = loss_selector
-        self.dataset_selector = dataset_selector
+        self.loss_name = loss_name
+        self.use_loss_weights = use_loss_weights
+        self.dataset = dataset
         self.epochs = epochs
         self.batch_size = batch_size
         self.k_folds = k_folds
         self.save_path = save_path
+        self.device = device
         self.save_results_path = None
 
     def _make_save_dir(self):
         count = 1
         while True:
-            save_dir = f"{self.model_selector.name}_{self.optimizer_selector.name}_{self.dataset_selector.name}_{count}"
+            save_dir = f"{self.model_selector.model_name}_{self.optimizer_selector.optimizer_name}_{self.dataset.name}_{count}"
             save_dir_path = pl.Path(self.save_path) / pl.Path(save_dir)
             if not os.path.exists(save_dir_path):
                 os.makedirs(save_dir_path)
@@ -46,18 +52,16 @@ class TrainTask:
         os.makedirs(self.save_results_path / f"fold_{fold}")
         return self.save_results_path / f"fold_{fold}"
 
-    def run(self, train_loader, val_loader, epochs):
+    def run(self):
         model = self.model_selector.get_model()
-        optimizer = self.optimizer_selector.get_optimizer(model)
-        loss = self.loss_selector.get_loss()
-        dataset = self.dataset_selector.get_dataset()
+        print(self.dataset)
 
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
             logger.info(f"Created root directory to save all results {self.save_path}")
 
         # make saving dir with format model_name_optimizer_name_dataset_day_month_year
-        save_dir = f"{model.name}_{self.optimizer_selector.name}_{self.dataset_selector.name}"
+        save_dir = f"{self.model_selector.model_name}_{self.optimizer_selector.optimizer_name}_{self.dataset.name}"
         save_dir_path = pl.Path(self.save_path) / pl.Path(save_dir)
         if not os.path.exists(save_dir_path):
             os.makedirs(save_dir_path)
@@ -68,19 +72,33 @@ class TrainTask:
             self._make_save_dir()
 
         # save fold results
-        folds_paths_df = dataset.folds_df
+        folds_paths_df = self.dataset.folds_df
+        print(self.dataset)
         folds_paths_df.to_csv(self.save_results_path / "folds_paths.csv", index=False)
 
-        test_dataset = dataset.test_dataset
+        test_dataset = self.dataset.test_dataset
         test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
 
-        for fold in self.k_folds:
-            train_dataset, val_dataset = self.dataset_selector.get_k_fold_train_val_tuple(fold)
+        for fold in range(self.k_folds):
+            model = copy.deepcopy(self.model_selector.get_model())
+            train_dataset, val_dataset = self.dataset.get_k_fold_train_val_tuple(fold)
             train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
             val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
 
+            optimizer_selector = copy.deepcopy(self.optimizer_selector)
+            optimizer = optimizer_selector.get_optimizer(model.parameters())
+            scheduler = optimizer_selector.get_scheduler()
+
+            if self.use_loss_weights:
+                class_weights = compute_class_weight('balanced', classes=np.array([0, 1]), y=train_dataset.labels)
+                class_weights = torch.tensor(class_weights)
+            
+            loss_selector = LossSelector(self.loss_name, class_weights)
+            print(loss_selector)
+            loss = loss_selector.get_loss()
+        
             fold_dir = str(self._make_fold_save_dir(fold))
-            train_losses, train_accs, vals_losses, vals_accs = train(model, optimizer, loss, train_loader, val_loader, epochs, fold_dir)
+            train_losses, train_accs, vals_losses, vals_accs = train(model, optimizer, scheduler, loss, train_loader, val_loader, fold_dir, self.epochs, self.device)
             
             # save fold results
             fold_results = {
@@ -94,7 +112,7 @@ class TrainTask:
             fold_results_df.to_csv(fold_dir / "fold_results.csv", index=False)
 
             # test model
-            test_loss, _, y_pred, y_true = test(model, loss, test_loader)
+            test_loss, _, y_pred, y_true = test(model, loss, test_loader, self.device)
 
             recall_score_val = recall_score(y_true, y_pred)
             precision_score_val = precision_score(y_true, y_pred)
