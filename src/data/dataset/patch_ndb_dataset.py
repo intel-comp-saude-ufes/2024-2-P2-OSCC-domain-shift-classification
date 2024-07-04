@@ -12,6 +12,7 @@ from src.data.dataset.custom_dataset import CustomDataset
 from src.data.dataset.dataset_interface import DatasetInterface
 
 class PatchDataset(DatasetInterface):
+    name = 'patches_ndb'
     """
     Dataset for patches images. Arranges the patches in train and test sets considering the parent image (prefix of the image name). It has a train and test dataset that can be accessed by the attributes train_dataset and test_dataset.
     These datasets can be used in the DataLoader class from PyTorch.
@@ -28,8 +29,8 @@ class PatchDataset(DatasetInterface):
         self.train_dataset = CustomDataset(self.train[0], self.train[1], transform=self.train_transform)
         self.test_dataset = CustomDataset(self.test[0], self.test[1], transform=self.test_transform)
 
-        self.k_folds_dataset = self._generate_k_folds()
         self.folds_df = None
+        self.k_folds_dataset = self._generate_k_folds()
     
     def _get_files(self):
         """

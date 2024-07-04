@@ -9,6 +9,7 @@ from src.data.dataset.custom_dataset import CustomDataset
 from src.data.dataset.dataset_interface import DatasetInterface
 
 class ImageNDBDataset(DatasetInterface):
+    name = 'image_ndb'
     """
     Dataset for images without patches (original images). It has a train and test dataset that can be accessed by the attributes train_dataset and test_dataset. These datasets can be used in the DataLoader class from PyTorch.
     """
