@@ -167,3 +167,7 @@ data/*
 
 # logging
 wandb/*
+
+#model files
+*.pth
+*.pt
