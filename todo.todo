@@ -1,0 +1,39 @@
+- Definicao de hyperparams:
+    - otimizador: SGD
+    - scheduler: ReduceLROnPlateau
+    - taxa de aprendizado: 10e-3
+    - batchsize: 128 
+    - epochs: 200
+    - Epochs forearlystop 15
+    - Optimizer scheduler reduce factor 0.1
+    - Optimizer schedulerLRlowerbound 10−6
+    - Optimizer schedulerpatience 10
+    - Weighted cross-entropy
+
+- Adicionar validacao cruzada para o PatchDataset (FOCO SEM CONTAMINACAO)
+
+- Classe de modelos:
+    - modificar camada linear (classificador) para duas classes
+
+- Pipeline  
+    - Modo treino, modo teste
+    - Treino
+        - Dataloader dos folds
+        - Logs
+        - Treino loop
+        - Save checkpoint
+        - Save artefacts locally
+    - teste 
+        - carregar modelo
+    - Ambos
+        - Val
+
+- Adicionar click/params
+python --task train --dataset rahman --weights default
+python --task train --dataset p-ndb-ufes --weights default
+python --task test --model_path blabla --dataset p-ndb-ufes
+python --task train --dataset p-ndb-ufes --weights path_to_file
+
+# flag, se nao for default é o path do modelo
+
+
