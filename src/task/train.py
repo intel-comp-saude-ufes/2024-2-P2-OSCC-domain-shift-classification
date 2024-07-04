@@ -1,139 +1,125 @@
-# selecionar o modelo
-# selecionar o dataset
-# rodar o treino cross val
+import os
+import pathlib as pl
 
-from torch.utils.tensorboard import SummaryWriter
-import torch
-import numpy as np
-from sklearn.metrics import accuracy_score
-import time
+import pandas as pd
+from torch.utils.data import DataLoader
 
-class Experiments():
-    def __init__(self,model,loss_func,optimizer,fold=""):
-        self.model = model
+import wandb
+
+from sklearn.metrics import recall_score, precision_score, f1_score, accuracy_score
+
+from src.pipeline import train, test
+
+from src.model import ModelSelector
+from src.optimization import OptimizationSelector
+from src.loss import LossSelector
+from src.data import DatasetSelector
+
+from src.logger import logger
+
+class TrainTask:
+    def __init__(self, model_selector, optimizer_selector, loss_selector, dataset_selector, epochs, batch_size, k_folds, save_path):
+        self.model_selector = model_selector
+        self.optimizer_selector = optimizer_selector
+        self.loss_selector = loss_selector
+        self.dataset_selector = dataset_selector
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.k_folds = k_folds
+        self.save_path = save_path
+        self.save_results_path = None
+
+    def _make_save_dir(self):
+        count = 1
+        while True:
+            save_dir = f"{self.model_selector.name}_{self.optimizer_selector.name}_{self.dataset_selector.name}_{count}"
+            save_dir_path = pl.Path(self.save_path) / pl.Path(save_dir)
+            if not os.path.exists(save_dir_path):
+                os.makedirs(save_dir_path)
+                logger.info(f"Created directory to {save_dir_path}")
+                break
+            count += 1
         
-        if torch.cuda.device_count() > 1:
-            self.model= torch.nn.DataParallel(model)
+        self.save_results_path = save_dir_path
+
+    def _make_fold_save_dir(self, fold):
+        os.makedirs(self.save_results_path / f"fold_{fold}")
+        return self.save_results_path / f"fold_{fold}"
+
+    def run(self, train_loader, val_loader, epochs):
+        model = self.model_selector.get_model()
+        optimizer = self.optimizer_selector.get_optimizer(model)
+        loss = self.loss_selector.get_loss()
+        dataset = self.dataset_selector.get_dataset()
+
+        if not os.path.exists(self.save_path):
+            os.makedirs(self.save_path)
+            logger.info(f"Created root directory to save all results {self.save_path}")
+
+        # make saving dir with format model_name_optimizer_name_dataset_day_month_year
+        save_dir = f"{model.name}_{self.optimizer_selector.name}_{self.dataset_selector.name}"
+        save_dir_path = pl.Path(self.save_path) / pl.Path(save_dir)
+        if not os.path.exists(save_dir_path):
+            os.makedirs(save_dir_path)
+            self.save_results_path = save_dir_path
+            logger.info(f"Created directory to {save_dir_path}")
+        elif os.path.exists(save_dir_path):
+            logger.info(f"Directory {save_dir_path} already exists")
+            self._make_save_dir()
+
+        # save fold results
+        folds_paths_df = dataset.folds_df
+        folds_paths_df.to_csv(self.save_results_path / "folds_paths.csv", index=False)
+
+        test_dataset = dataset.test_dataset
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
+
+        for fold in self.k_folds:
+            train_dataset, val_dataset = self.dataset_selector.get_k_fold_train_val_tuple(fold)
+            train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+            val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
+
+            fold_dir = str(self._make_fold_save_dir(fold))
+            train_losses, train_accs, vals_losses, vals_accs = train(model, optimizer, loss, train_loader, val_loader, epochs, fold_dir)
             
-        self.loss_func = loss_func
-        self.optimizer = optimizer
-        self.fold = fold
-        
-        if fold == "":
-            self.writer = SummaryWriter()
-        else:
-            path_log_dir = "runs/" + fold
-            self.writer = SummaryWriter(log_dir=path_log_dir)
-        
-
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        print(self.device)
-
-    def eval_loss(self,data_loader):    
-        with torch.no_grad():
-            loss, cnt = 0, 0
-            pred_list, target_list = [], []
-            for images, labels, _, img_id in data_loader:
-                images = images.to(self.device)
-                labels = labels.to(self.device)
-                outputs = self.model(images)
-                loss += self.loss_func(outputs, labels).item()
-                cnt += 1
-
-                _, pred = torch.max(outputs, axis=1)
-                pred_list.append(pred.cpu().numpy())
-                target_list.append(labels.cpu().numpy())
-
-            
-            pred_list  = np.concatenate(pred_list).ravel()
-            target_list  = np.concatenate(target_list).ravel()
-            eval_acc = accuracy_score(pred_list, target_list)
-        
-        return loss/cnt , eval_acc
-
-    def train(self,train_dataloader,val_dataloader,num_epochs=100):
-        self.model.to(self.device)
-        best_loss = np.inf
-
-        print('--------------------------------')
-        print('| Epoch | Train Loss | Train Acc | Validation Loss | Validation Acc | Time |')
-    
-        for epoch in range(num_epochs):
-            start = time.time()
-            loss_epoch, cnt = 0, 0
-            pred_list, target_list = [], []
-            for k, (batch_images, batch_labels,_ , id_img) in enumerate(train_dataloader):  
-                # Aplicando um flatten na imagem e movendo ela para o device alvo
-                batch_images, batch_labels = batch_images.to(self.device), batch_labels.to(self.device)
-                
-                # Fazendo a forward pass
-                # observe que o modelo é agnóstico ao batch size
-                outputs = self.model(batch_images)
-                loss = self.loss_func(outputs, batch_labels)
-                loss_epoch += loss.item()
-
-                _, pred = torch.max(outputs, axis=1)
-                pred_list.append(pred.cpu().numpy())
-                target_list.append(batch_labels.cpu().numpy())
-                
-                # Fazendo a otimização
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()    
-                cnt += 1
-                
-                
-            loss_epoch = loss_epoch / cnt
-            loss_val_epoch,eval_acc = self.eval_loss(val_dataloader)
-            
-            
-            self.writer.add_scalar("LossTrain", loss_epoch, epoch)
-            self.writer.add_scalar("LossVal", loss_val_epoch, epoch)
-            
-            temp = {
-                "Train": loss_epoch,
-                "Val": loss_val_epoch
+            # save fold results
+            fold_results = {
+                "train_losses": train_losses,
+                "train_accs": train_accs,
+                "val_losses": vals_losses,
+                "val_accs": vals_accs
             }
-            self.writer.add_scalars("Loss", temp, epoch)
-            
-                
-            # Salvando o checkpoint da última época
-            checkpoint = {
-                    'epoch': epoch,
-                    'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict': self.optimizer.state_dict(),
-                    'loss': self.loss_func,
-                    'loss_val': loss_epoch
+
+            fold_results_df = pd.DataFrame(fold_results)
+            fold_results_df.to_csv(fold_dir / "fold_results.csv", index=False)
+
+            # test model
+            test_loss, _, y_pred, y_true = test(model, loss, test_loader)
+
+            recall_score_val = recall_score(y_true, y_pred)
+            precision_score_val = precision_score(y_true, y_pred)
+            f1_score_val = f1_score(y_true, y_pred)
+            accuracy_score_val = accuracy_score(y_true, y_pred)
+
+            wandb.log({f"test/loss/fold{fold}": test_loss, f"test/recall/fold{fold}": recall_score_val, f"test/precision/fold{fold}": precision_score_val, f"test/f1/fold{fold}": f1_score_val, f"test/accuracy/fold{fold}": accuracy_score_val})
+
+            results = {
+                "test_loss": test_loss,
+                "recall_score": recall_score_val,
+                "precision_score": precision_score_val,
+                "f1_score": f1_score_val,
+                "accuracy_score": accuracy_score_val
             }
-            checkpoint_name = "last_checkpoint"+self.fold+".pth"
-            torch.save(checkpoint, checkpoint_name)
-        
-            # Salvando a mellhor execução    
-            if loss_val_epoch < best_loss:        
-                best_loss = loss
-                best_checkpoint_name = "best_checkpoint"+self.fold+".pth"
-                torch.save(checkpoint, best_checkpoint_name)
-                
-            pred_list  = np.concatenate(pred_list).ravel()
-            target_list  = np.concatenate(target_list).ravel()
-            train_acc = accuracy_score(pred_list, target_list)
 
-            self.writer.add_scalar("AccTrain", train_acc, epoch)
-            self.writer.add_scalar("AccVal", eval_acc, epoch)
+            # save metrics
+            results_df = pd.DataFrame(results, index=[0])
+            results_df.to_csv(fold_dir / "test_results.csv", index=False)
+
+            preds_true = {
+                "preds": y_pred,
+                "true": y_true
+            }
             
-            end = time.time()
-            #print (f"- Epoch [{epoch+1}/{num_epochs}] | Loss: {loss_epoch:.4f} | Loss Val: {loss_val_epoch:.4f}")
-            print(f'|  {epoch:03.0f}  |   {loss_epoch:.5f}  |    {train_acc*100:02.0f}%    |     {loss_val_epoch:.5f}     |       {eval_acc*100:02.0f}%      | {end-start:.2f} |')
-
-    def test(self,test_dataloader):
-        with torch.no_grad():
-            correct, total = 0, 0
-            for images, labels, _, img_id in test_dataloader:
-                images = images.to(self.device)
-                labels = labels.to(self.device)
-                outputs = self.model(images)
-                _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-        
-            print(f"Accuracy: {100 * correct / total}%")
+            # save predictions
+            preds_true_df = pd.DataFrame(preds_true)
+            preds_true_df.to_csv(fold_dir / "preds_true.csv", index=False)
