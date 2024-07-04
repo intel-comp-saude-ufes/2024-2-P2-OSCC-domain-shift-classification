@@ -73,12 +73,30 @@ pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorc
 
 ### Experimental phase
 
-1. Split datasets in test and train
-2. Run training experiments with patches dataset and images in their original size (don't mix datasets)
-3. Test models in all test sets
-4. Study image processing transformation on Rahman's training image set
-5. Apply image transformation to NDB-UFES training image set and rerun experiments
-6. Test models and validate if transformations improved classification in domain shift
+Part 1 <br>
+
+1. Split datasets in test and train for both Rahman and P-NDB-UFES.
+2. Run training experiments with patches dataset with the same transformation
+3. Run training experiments with Rahman dataset with the same transformation
+
+Part 2 <br>
+
+4. Test P-NDB-UFES model with P-NDB-UFES test set
+5. Test P-NDB-UFES model with Rahman test set (no training done on Rahman here)
+6. Test Rahman model with Rahman test set
+7. Test Rahman model with P-NDB-UFES test set (no training done on P-NDB-UFES here)
+
+Part 3 <br>
+
+8. Training P-NDB-UFES model on Rahman training set (transfer learning)
+9. Test P-NDB-UFES-Rahman model with Rahman test
+10. Test P-NDB-UFES-Rahman model with P-NDB-UFES test
+
+Part 4 <br>
+
+11. Analyze results
+
 
 ## References
+
 
