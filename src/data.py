@@ -134,7 +134,6 @@ class PatchDataset:
         images_parents = list(set([self._get_parent_image_name(image) for image in images]))
 
         folds = KFold(n_splits=self.k_folds, shuffle=True, random_state=42)
-        folds.get_n_splits(images_parents)
         folds_parents_list = []
 
         for fold in folds.split(images_parents):
