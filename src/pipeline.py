@@ -52,7 +52,7 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
         start = time.time()
     
         train_loss, train_acc = train_inner_loop(model, optimizer, loss_func, train_dataloader, device=device)
-        val_loss, val_acc = test(model, loss_func, val_dataloader, device=device)
+        val_loss, val_acc, _, _ = test(model, loss_func, val_dataloader, device=device)
         scheduler.step()
         
         end = time.time()
@@ -101,5 +101,5 @@ def test(model, loss_func, dataloader, device='cpu'):
         acc = np.mean(pred_list == target_list)
         loss = running_loss / len(pred_list)
 
-        return loss, acc
+        return loss, acc, pred_list, target_list
         
