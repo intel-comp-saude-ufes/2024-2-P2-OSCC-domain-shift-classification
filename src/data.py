@@ -112,7 +112,7 @@ class PatchDataset:
 
         return (images_train, labels_train), (images_test, labels_test)
     
-    def __create_df_splits(self, k_folds_datasets):
+    def _create_df_splits(self, k_folds_datasets):
         """
         Create dataframe with the k-folds splits for the dataset
         """
@@ -150,7 +150,7 @@ class PatchDataset:
 
             folds_parents_list.append((train_imgs, train_labels, test_imgs, test_labels))
 
-        self.__create_df_splits(folds_parents_list)
+        self._create_df_splits(folds_parents_list)
 
         return folds_parents_list
     
