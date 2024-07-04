@@ -11,3 +11,7 @@ ipykernel==6.29.4
 ipython==8.25.0
 jupyter_client==8.6.2
 jupyter_core==5.7.2
+
+wandb
+logging
+coloredlogs
