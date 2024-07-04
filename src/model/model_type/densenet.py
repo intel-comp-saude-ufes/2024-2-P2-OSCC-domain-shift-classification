@@ -42,3 +42,6 @@ class DenseNet121:
     
     def get_model(self):
         return self.model
+    
+    def parameters(self):
+        return self.model.parameters()
