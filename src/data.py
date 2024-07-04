@@ -8,6 +8,7 @@ import pandas as pd
 from PIL import Image
 
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 class CustomDataset(torch.utils.data.Dataset):
     """
@@ -33,8 +34,9 @@ class PatchDataset:
     Dataset for patches images. Arranges the patches in train and test sets considering the parent image (prefix of the image name). It has a train and test dataset that can be accessed by the attributes train_dataset and test_dataset.
     These datasets can be used in the DataLoader class from PyTorch.
     """	
-    def __init__(self, path, train_size=0.8, transform=None):
+    def __init__(self, path, train_size=0.8, k_folds=5, transform=None):
         self.path = path
+        self.k_folds = k_folds
         self.train_size = train_size
         self.transform = transform if transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
         self.labels_names = {0: 'noncarcinoma', 1: 'carcinoma'}
@@ -42,6 +44,8 @@ class PatchDataset:
 
         self.train_dataset = CustomDataset(self.train[0], self.train[1], transform=self.transform)
         self.test_dataset = CustomDataset(self.test[0], self.test[1], transform=self.transform)
+
+        self.k_folds_dataset = self._generate_k_folds()
     
     def _get_files(self):
         """
@@ -107,6 +111,57 @@ class PatchDataset:
         labels_test = [1 if 'carcinoma' in str(image) else 0 for image in images_test]
 
         return (images_train, labels_train), (images_test, labels_test)
+    
+    def __create_df_splits(self, k_folds_datasets):
+        """
+        Create dataframe with the k-folds splits for the dataset
+        """
+        folds = [(i, fold) for i, fold in enumerate(k_folds_datasets)]
+        folds = [(fold[0], fold[1][2], fold[1][3]) for fold in folds]
+
+        # expand the folds
+        folds = [(fold[0], image.parts[-1], label) for fold in folds for image, label in zip(fold[1], fold[2])]
+
+        self.folds_df = pd.DataFrame(folds, columns=['fold', 'image_path', 'class'])
+
+
+    def _generate_k_folds(self):
+        """
+        Generate k-folds for the dataset
+        """
+        
+        images = self.train[0]
+        images_parents = list(set([self._get_parent_image_name(image) for image in images]))
+
+        folds = KFold(n_splits=self.k_folds, shuffle=True, random_state=42)
+        folds.get_n_splits(images_parents)
+        folds_parents_list = []
+
+        for fold in folds.split(images_parents):
+            train_index, test_index = fold
+            train_parents = [images_parents[i] for i in train_index]
+            test_parents = [images_parents[i] for i in test_index]
+
+            train_imgs = [image for image in images if self._get_parent_image_name(image) in train_parents]
+            test_imgs = [image for image in images if self._get_parent_image_name(image) in test_parents]
+
+            train_labels = [1 if 'carcinoma' in str(image) else 0 for image in train_imgs]
+            test_labels = [1 if 'carcinoma' in str(image) else 0 for image in test_imgs]
+
+            folds_parents_list.append((train_imgs, train_labels, test_imgs, test_labels))
+
+        self.__create_df_splits(folds_parents_list)
+
+        return folds_parents_list
+    
+    def get_k_fold_train_val_tuple(self, k):
+        """
+        Get K-fold train and validation dataset
+        """
+        train_dataset = CustomDataset(self.k_folds_dataset[k][0], self.k_folds_dataset[k][1], transform=self.transform)
+        val_dataset = CustomDataset(self.k_folds_dataset[k][2], self.k_folds_dataset[k][3], transform=self.transform)
+
+        return train_dataset, val_dataset
 
     def __len__(self):
         return len(self.train[0]) + len(self.test[0])
