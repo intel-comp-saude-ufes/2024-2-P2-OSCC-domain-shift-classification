@@ -10,7 +10,8 @@ class LossSelector:
         if self.loss_name == 'cross_entropy':
             if self.weight is None:
                 return CrossEntropyLoss()
-            return CrossEntropyLoss(weight=self.weight)
+            else:
+                return CrossEntropyLoss(weight=self.weight)
         else:
             raise ValueError('Invalid loss name')
         
