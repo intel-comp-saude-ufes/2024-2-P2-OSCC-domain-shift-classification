@@ -3,7 +3,7 @@ from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
 
 class OptimizationSelector:
     def __init__(self, optimizer_name, scheduler_name, learning_rate, **kwargs):
-        self.optimization_name = optimizer_name.lower()
+        self.optimizer_name = optimizer_name.lower()
         self.scheduler_name = scheduler_name.lower()
         self.learning_rate = learning_rate
         self.kwargs = kwargs
@@ -12,9 +12,9 @@ class OptimizationSelector:
         self.scheduler = None
 
     def get_optimizer(self, model_parameters):
-        if self.optimization_name == 'adam':
+        if self.optimizer_name == 'adam':
             self.optimizer = Adam(model_parameters, lr=self.learning_rate)
-        elif self.optimization_name == 'sgd':
+        elif self.optimizer_name == 'sgd':
             self.optimizer = SGD(model_parameters, lr=self.learning_rate)
         else:
             raise ValueError('Invalid optimization name')
