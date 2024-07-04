@@ -5,6 +5,7 @@ import torch
 import os
 
 class DenseNet121:
+    name = 'densenet121'
     """
     DenseNet121 model from torchvision, with the classifier layer changed to the number of classes in the dataset and the weights loaded from the default weights or a custom path.
     """
