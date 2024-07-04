@@ -4,8 +4,14 @@ import os
 import click
 from click_params import DecimalRange
 
+from sklearn.utils.class_weight import compute_class_weight
+
 from src.logger import logger
 from src.task.train import TrainTask
+from src.model import ModelSelector
+from src.optimization import OptimizationSelector
+from src.loss import LossSelector
+from src.data import DatasetSelector
 
 PATCH_PATH = pl.Path(os.path.abspath("")) / pl.Path('data') / pl.Path('ndb_ufes') / pl.Path('patches')
 IMAGE_PATH = pl.Path(os.path.abspath("")) / pl.Path('data') / pl.Path('ndb_ufes') / pl.Path('images') 
@@ -31,14 +37,41 @@ METADATA_PATH = pl.Path(os.path.abspath("")) / pl.Path('data') / pl.Path('ndb_uf
 @click.option("--k_folds", default=5, help="K folds", type=int, show_default=True)
 @click.option("--model_name", default="densenet121", help="Model name", type=click.Choice(["densenet121"]), show_default=True)
 @click.option("--num_classes", default=2, help="Number of classes", type=int, show_default=True)
-@click.option("--model_weights_path", default=None, help="Model weights path", type=str, show_default=True)
+@click.option("--model_weights_path", default='default', help="Model weights path", type=str, show_default=True)
 @click.option("--epochs", default=200, help="Number of epochs", type=int, show_default=True)
 @click.option("--batch_size", default=32, help="Batch size", type=int, show_default=True)
-def main(train, test, optimizer_name, learning_rate, scheduler_name, step_size, gamma, mode, factor, patience, min_lr, loss_name, use_weights_loss, dataset_name, dataset_path, train_size, k_folds, model_name, num_classes, model_weights_path, epochs, batch_size):
-    print(train, test, optimizer_name, learning_rate, scheduler_name, step_size, gamma, mode, factor, patience, min_lr, loss_name, use_weights_loss, dataset_name, dataset_path, train_size, k_folds, model_name, num_classes, model_weights_path, epochs, batch_size, sep="\n")
-    
+@click.option("--save_path", default="results", help="Save path", type=str, show_default=True)
+def main(train, test, optimizer_name, learning_rate, scheduler_name, step_size, gamma, mode, factor, patience, min_lr, loss_name, \
+         use_weights_loss, dataset_name, dataset_path, train_size, k_folds, model_name, num_classes, model_weights_path, epochs,  \
+         batch_size, save_path):    
+    # convert to Path
+    dataset_path = pl.Path(dataset_path)
+    save_path = pl.Path(save_path)
+    model_weights_path = pl.Path(model_weights_path) if model_weights_path.lower() != "default" else model_weights_path
+
+    train_size = float(train_size)
+    dataset_selector = DatasetSelector(dataset_name, dataset_path, train_size=train_size, k_folds=k_folds)
+    dataset = dataset_selector.get_dataset()
+    num_classes = len(dataset.labels_names)
+
+    # initialize model
+    print(model_name, num_classes, model_weights_path)
+    model_selector = ModelSelector(model_name, model_weights_path, num_classes=num_classes)
+    model = model_selector.get_model()
+
     if train:
-        print("training")
+        logger.info(f"Training model {model_name} with dataset {dataset_name}")
+        optimization_selector = OptimizationSelector(optimizer_name, scheduler_name, learning_rate, step_size=step_size, gamma=gamma, mode=mode, factor=factor, patience=patience, min_lr=min_lr)
+        optimizer = optimization_selector.get_optimizer(model.parameters())
+        scheduler = optimization_selector.get_scheduler()
+
+        if use_weights_loss:
+            class_weights = compute_class_weight('balanced', classes=dataset.labels_names.values(), y=dataset.labels)
+
+        loss_selector = LossSelector(loss_name, class_weights)
+
+        train_task = TrainTask(model, optimizer, scheduler, loss_selector, dataset, epochs, batch_size, k_folds=k_folds, save_path=save_path)
+        train_task.run()
     elif test:
         print("testing")
     else:
