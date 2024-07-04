@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import time
 
 import wandb
 import pathlib as pl
@@ -24,9 +25,6 @@ def train_inner_loop(model, optimizer, loss_func, train_dataloader, device='cpu'
         running_accuracy = (pred == labels).sum().item() / len(labels)
 
         wandb.log({"train/loss/step": loss.item(), "train/acc/step": running_accuracy})
-
-        if i % 10 == 0:
-            logger.info(f"Step: {i} | Loss: {loss.item()} | Accuracy: {running_accuracy}") # so pra ver 
         
         optimizer.zero_grad()
         loss.backward()
@@ -48,16 +46,17 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
     train_accs, train_losses = [], []
     vals_accs, vals_losses = [], []
     best_loss = np.inf
-
+    logger.info('------------------------------------------------------------------------------')
+    logger.info('| Epoch | Train Loss | Train Acc | Validation Loss | Validation Acc |  Time  |')
     for epoch in range(num_epoch):
-        logger.info(f"'--------------------------------'")
-        logger.info(f"| Epoch | Train Loss | Train Acc | Validation Loss | Validation Acc |")
-
+        start = time.time()
+    
         train_loss, train_acc = train_inner_loop(model, optimizer, loss_func, train_dataloader, device=device)
         val_loss, val_acc = test(model, loss_func, val_dataloader, device=device)
         scheduler.step()
         
-        logger.info(f'|  {epoch:03.0f}  |   {train_loss:.5f}  |    {train_acc*100:02.0f}%    |     {val_loss:.5f}     |       {val_acc*100:02.0f}%      |')
+        end = time.time()
+        logger.info(f'|  {epoch+1:03.0f}  |   {train_loss:.5f}  |    {train_acc*100:02.0f}%    |     {val_loss:.5f}     |       {val_acc*100:02.0f}%      | {end-start:.2f}s |')
         
         # logging to wandb
         wandb.log({"train/loss/epoch": train_loss, "train/acc/epoch": train_acc})
@@ -66,7 +65,7 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
         # saving best and last checkpoint
         if val_loss < best_loss:
             best_loss = val_loss
-            best_path_name = pl.Path(saving_path).stem / "best_checkpoint.pth"
+            best_path_name = pl.Path(saving_path) / "best_checkpoint.pth"
             torch.save(model.state_dict(), best_path_name)
         
         torch.save(model.state_dict(), checkpoint_name)
@@ -78,8 +77,8 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
     return train_losses, train_accs, vals_losses, vals_accs
 
 def test(model, loss_func, dataloader, device='cpu'):
-    with torch.no_grad:
-        model.eval()
+    model.eval()
+    with torch.no_grad():
         running_loss = 0
         pred_list, target_list = [], []
 
