@@ -62,12 +62,12 @@ def main(train, test, optimizer_name, learning_rate, scheduler_name, step_size, 
 
     # initialize model
     print(model_name, num_classes, model_weights_path)
-    model_selector = ModelSelector(model_name, model_weights_path, num_classes=num_classes)
+    model_selector = ModelSelector(model_name, model_weights_path, num_classes=num_classes, device=device)
 
     if train:
         logger.info(f"Training model {model_name} with dataset {dataset_name}")
         optimization_selector = OptimizationSelector(optimizer_name, scheduler_name, learning_rate, step_size=step_size, gamma=gamma, mode=mode, factor=factor, patience=patience, min_lr=min_lr)
-        train_task = TrainTask(model_selector, optimization_selector, loss_name, use_weights_loss, dataset, epochs, k_folds, save_path, device)
+        train_task = TrainTask(model_selector, optimization_selector, loss_name, use_weights_loss, dataset, epochs, batch_size, k_folds, save_path, device)
         train_task.run()
     elif test:
         print("testing")
