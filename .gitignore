@@ -164,6 +164,7 @@ cython_debug/
 # dataset files
 data/*
 *.zip
+results/*
 
 # logging
 wandb/*
