@@ -16,18 +16,20 @@ class PatchDataset(DatasetInterface):
     Dataset for patches images. Arranges the patches in train and test sets considering the parent image (prefix of the image name). It has a train and test dataset that can be accessed by the attributes train_dataset and test_dataset.
     These datasets can be used in the DataLoader class from PyTorch.
     """	
-    def __init__(self, path, train_size=0.8, k_folds=5, transform=None):
+    def __init__(self, path, train_size=0.8, k_folds=5, train_transform=None, test_transform=None):
         self.path = path
         self.k_folds = k_folds
         self.train_size = train_size
-        self.transform = transform if transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
+        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
+        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
         self.labels_names = {0: 'noncarcinoma', 1: 'carcinoma'}
         self.train, self.test = self._train_test_split()
 
-        self.train_dataset = CustomDataset(self.train[0], self.train[1], transform=self.transform)
-        self.test_dataset = CustomDataset(self.test[0], self.test[1], transform=self.transform)
+        self.train_dataset = CustomDataset(self.train[0], self.train[1], transform=self.train_transform)
+        self.test_dataset = CustomDataset(self.test[0], self.test[1], transform=self.test_transform)
 
         self.k_folds_dataset = self._generate_k_folds()
+        self.folds_df = None
     
     def _get_files(self):
         """
@@ -139,8 +141,8 @@ class PatchDataset(DatasetInterface):
         """
         Get K-fold train and validation dataset
         """
-        train_dataset = CustomDataset(self.k_folds_dataset[k][0], self.k_folds_dataset[k][1], transform=self.transform)
-        val_dataset = CustomDataset(self.k_folds_dataset[k][2], self.k_folds_dataset[k][3], transform=self.transform)
+        train_dataset = CustomDataset(self.k_folds_dataset[k][0], self.k_folds_dataset[k][1], transform=self.train_transform)
+        val_dataset = CustomDataset(self.k_folds_dataset[k][2], self.k_folds_dataset[k][3], transform=self.test_transform)
 
         return train_dataset, val_dataset
 

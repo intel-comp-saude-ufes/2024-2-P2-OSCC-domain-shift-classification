@@ -12,16 +12,17 @@ class ImageNDBDataset(DatasetInterface):
     """
     Dataset for images without patches (original images). It has a train and test dataset that can be accessed by the attributes train_dataset and test_dataset. These datasets can be used in the DataLoader class from PyTorch.
     """
-    def __init__(self, path, metadata_path, train_size=0.8, transform=None):
+    def __init__(self, path, metadata_path, train_size=0.8, train_transform=None, test_transform=None):
         self.images_path = path
         self.metadata_path = metadata_path
-        self.transform = transform if transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
+        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
+        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
         self.train_size = train_size
         self.labels_names = {0: 'noncarcinoma', 1: 'carcinoma'}
         self.train, self.test = self._train_test_split()
 
-        self.train_dataset = CustomDataset(self.train[0], self.train[1], transform=self.transform)
-        self.test_dataset = CustomDataset(self.test[0], self.test[1], transform=self.transform)
+        self.train_dataset = CustomDataset(self.train[0], self.train[1], transform=self.train_transform)
+        self.test_dataset = CustomDataset(self.test[0], self.test[1], transform=self.test_transform)
 
     def _get_files(self):
         """
