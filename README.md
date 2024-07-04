@@ -73,6 +73,8 @@ pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorc
 
 ### Experimental phase
 
+Base model: DenseNet121
+
 Part 1 <br>
 
 1. Split datasets in test and train for both Rahman and P-NDB-UFES.
@@ -88,7 +90,7 @@ Part 2 <br>
 
 Part 3 <br>
 
-8. Training P-NDB-UFES model on Rahman training set (transfer learning)
+8. Training P-NDB-UFES model on Rahman training set (transfer learning) 100x + 400x
 9. Test P-NDB-UFES-Rahman model with Rahman test
 10. Test P-NDB-UFES-Rahman model with P-NDB-UFES test
 
