@@ -10,7 +10,7 @@
     - Optimizer schedulerpatience 10
     - Weighted cross-entropy
 
-- Adicionar validacao cruzada para o PatchDataset (FOCO SEM CONTAMINACAO)
+✔️ Adicionar validacao cruzada para o PatchDataset (FOCO SEM CONTAMINACAO)
 
 - Classe de modelos:
     - modificar camada linear (classificador) para duas classes
