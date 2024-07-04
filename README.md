@@ -11,24 +11,25 @@ In order to use the images, the directory `data` was created at the roo of the r
 The data directory contained the following format:
 ```
 data
-|---- images
-|      |-- image.png
-|      |-- image.png
-|      |-- ...
-|---- patches
-|      |-- carcinoma
-|      |    |-- image.png
-|      |    |-- image.png
-|      |    |-- ....png
-|      |-- no_dysplasia
-|      |    |-- image.png
-|      |    |-- image.png
-|      |    |-- ....png
-|      |-- dysplasia
-|      |    |-- image.png
-|      |    |-- image.png
-|      |    |-- ....png
 |---- ndb-ufes
+|     |---- images
+|     |      |-- image.png
+|     |      |-- image.png
+|     |      |-- ...
+|     |---- patches
+|     |      |-- carcinoma
+|     |      |    |-- image.png
+|     |      |    |-- image.png
+|     |      |    |-- ....png
+|     |      |-- no_dysplasia
+|     |      |    |-- image.png
+|     |      |    |-- image.png
+|     |      |    |-- ....png
+|     |      |-- dysplasia
+|     |      |    |-- image.png
+|     |      |    |-- image.png
+|     |      |    |-- ....png
+|     |---- ndb-ufes.csv
 ```
 
 The dataset used for test was [Histopathological imaging database for Oral Cancer analysis](https://data.mendeley.com/datasets/ftmp4cvtmb/2), curated by Tabassum Yesmin Rahman, Lipi B. Mahanta, Anup K. Das, Jagannath D. Sarma. Published in January 9, 2023. Mendeley Data, V1, doi: 10.17632/ftmp4cvtmb.2
