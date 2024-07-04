@@ -5,31 +5,13 @@ from torchvision.transforms import v2
 import numpy as np
 import pandas as pd
 
-from PIL import Image
-
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 
-class CustomDataset(torch.utils.data.Dataset):
-    """
-    Custom dataset, loading image from disk so it is not necessary to load all images in memory
-    """	
-    def __init__(self, image_paths, labels, transform=None):
-        self.image_paths = image_paths
-        self.labels = labels
-        self.transform = transform
+from src.data.dataset.custom_dataset import CustomDataset
+from src.data.dataset.dataset_interface import DatasetInterface
 
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, idx):
-        image = Image.open(self.image_paths[idx]).convert("RGB")
-        image = self.transform(image)
-        
-        labels = self.labels[idx]
-        return image, labels
-        
-class PatchDataset:
+class PatchDataset(DatasetInterface):
     """
     Dataset for patches images. Arranges the patches in train and test sets considering the parent image (prefix of the image name). It has a train and test dataset that can be accessed by the attributes train_dataset and test_dataset.
     These datasets can be used in the DataLoader class from PyTorch.
@@ -164,46 +146,3 @@ class PatchDataset:
 
     def __len__(self):
         return len(self.train[0]) + len(self.test[0])
-    
-
-class ImageDataset:
-    """
-    Dataset for images without patches (original images). It has a train and test dataset that can be accessed by the attributes train_dataset and test_dataset. These datasets can be used in the DataLoader class from PyTorch.
-    """
-    def __init__(self, images_path, metadata_path, train_size=0.8, transform=None):
-        self.images_path = images_path
-        self.metadata_path = metadata_path
-        self.transform = transform if transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
-        self.train_size = train_size
-        self.train, self.test = self._train_test_split()
-
-        self.train_dataset = CustomDataset(self.train[0], self.train[1], transform=self.transform)
-        self.test_dataset = CustomDataset(self.test[0], self.test[1], transform=self.transform)
-
-    def _get_files(self):
-        """
-        Get files from the path by class carcinoma and non-carcinoma
-        """
-        images = list(self.images_path.glob('*.png'))
-        return images
-    
-    def _train_test_split(self):
-        """
-        Split the dataset into train and test
-        """
-        images = self._get_files()
-        metadata= pd.read_csv(self.metadata_path)[["path", "diagnosis"]]
-
-        classes = {"OSCC": "carcinoma", "Leukoplakia with dysplasia": "noncarcinoma", "Leukoplakia without dysplasia": "noncarcinoma"}
-        metadata["diagnosis"] = metadata["diagnosis"].map(classes)
-
-        # split into train and test
-        train, test = train_test_split(metadata, train_size=self.train_size, stratify=metadata["diagnosis"], random_state=42)
-
-        train_images = [image for image in images if image.parts[-1] in train["path"].values]
-        test_images = [image for image in images if image.parts[-1] in test["path"].values]
-
-        train_labels = [1 if 'carcinoma' == diagnosis else 0 for diagnosis in train["diagnosis"].values]
-        test_labels = [1 if 'carcinoma' == diagnosis else 0 for diagnosis in test["diagnosis"].values]
-
-        return (train_images, train_labels), (test_images, test_labels)
