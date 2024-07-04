@@ -20,7 +20,7 @@ class DenseNet121:
             self.device = torch.device(device)
 
         if torch.cuda.device_count() > 1:
-            self.model= torch.nn.DataParallel(self.model)
+            self.model= torch.nn.DataParallel(self.model).to(self.device)
         else:
             self.model.to(self.device)
     
