@@ -1,23 +1,14 @@
 import torch
-# from torch import nn
 from torchvision.transforms import v2
 
 import numpy as np
 import pandas as pd
 
-# from PIL import Image
-
-# import pathlib as pl
-# import os
-
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 
-# import matplotlib.pyplot as plt
-
 from src.data.dataset.custom_dataset import CustomDataset
 from src.data.dataset.dataset_interface import DatasetInterface
-
 
 class RahmanDataset(DatasetInterface):
     """
