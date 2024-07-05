@@ -29,7 +29,7 @@ METADATA_PATH = pl.Path(os.path.abspath("")) / pl.Path('data') / pl.Path('ndb_uf
 @click.option("--patience", default=10, help="Patience for ReduceLROnPlateau scheduler", type=int, show_default=True)
 @click.option("--min_lr", default=10e-6, help="Min lr for ReduceLROnPlateau scheduler", type=float, show_default=True)
 @click.option("--loss_name", default="cross_entropy", help="Loss name", type=click.Choice(["cross_entropy"]), show_default=True)
-@click.option("--use_weights_loss", default=True, help="Use weights", type=bool, show_default=True)
+@click.option("--use_weights_loss",is_flag=True, help="Use weights for loss", default=True, show_default=True)
 @click.option("--dataset_name", default="patches_ndb", help="Dataset name", type=click.Choice(["patches_ndb", "rahman"]), show_default=True)
 @click.option("--dataset_path", default=PATCH_PATH, help="Dataset path", type=str, show_default=True)
 @click.option("--train_size", default=0.8, help="Train size", show_default=True, type=DecimalRange(0, 1))
@@ -41,14 +41,18 @@ METADATA_PATH = pl.Path(os.path.abspath("")) / pl.Path('data') / pl.Path('ndb_uf
 @click.option("--batch_size", default=32, help="Batch size", type=int, show_default=True)
 @click.option("--save_path", default="results", help="Save path", type=str, show_default=True)
 @click.option("--device", default="auto", help="Device", type=str, show_default=True)
+@click.option("--project_name", default="ia_health", help="Experiment", type=str, show_default=True)
+@click.option("--wandb_offline", is_flag=True, help="Wandb offline", default=False)
 def main(train, test, optimizer_name, learning_rate, scheduler_name, step_size, gamma, mode, factor, patience, min_lr, loss_name, \
          use_weights_loss, dataset_name, dataset_path, train_size, k_folds, model_name, num_classes, model_weights_path, epochs,  \
-         batch_size, save_path, device):    
-    
+         batch_size, save_path, device, project_name, wandb_offline):    
     if device == "auto":
         device = "cuda" if torch.cuda.is_available() else "cpu"
     else:
         device = device
+
+    if wandb_offline:
+        os.environ["WANDB_MODE"] = "offline"
 
     # convert to Path
     dataset_path = pl.Path(dataset_path)
@@ -61,18 +65,17 @@ def main(train, test, optimizer_name, learning_rate, scheduler_name, step_size, 
     num_classes = len(dataset.labels_names)
 
     # initialize model
-    print(model_name, num_classes, model_weights_path)
     model_selector = ModelSelector(model_name, model_weights_path, num_classes=num_classes, device=device)
 
     if train:
         logger.info(f"Training model {model_name} with dataset {dataset_name}")
         optimization_selector = OptimizationSelector(optimizer_name, scheduler_name, learning_rate, step_size=step_size, gamma=gamma, mode=mode, factor=factor, patience=patience, min_lr=min_lr)
-        train_task = TrainTask(model_selector, optimization_selector, loss_name, use_weights_loss, dataset, epochs, batch_size, k_folds, save_path, device)
+        train_task = TrainTask(model_selector, optimization_selector, loss_name, use_weights_loss, dataset, epochs, batch_size, k_folds, save_path, device, project_name)
         train_task.run()
     elif test:
         print("testing")
     else:
-        print("no action")
-
+        raise ValueError("You must use --train or --test flag")
+    
 if __name__ == "__main__":
     main()
