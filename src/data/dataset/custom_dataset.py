@@ -23,5 +23,8 @@ class CustomDataset(torch.utils.data.Dataset):
         image = self.transform(image)
         
         labels = self.labels[idx]
+
+        if image.max() > 1:
+            image = image / 255.0
         return image, labels
         
