@@ -29,7 +29,7 @@ def train_inner_loop(model, optimizer, loss_func, train_dataloader, device='cpu'
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()    
-    
+        
     # joining all the predictions and targets and flattening them
     pred_list  = np.concatenate(pred_list).ravel()
     target_list  = np.concatenate(target_list).ravel()
@@ -46,14 +46,13 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
     train_accs, train_losses = [], []
     vals_accs, vals_losses = [], []
     best_loss = np.inf
-    logger.info('------------------------------------------------------------------------------')
     logger.info('| Epoch | Train Loss | Train Acc | Validation Loss | Validation Acc |  Time  |')
     for epoch in range(num_epoch):
         start = time.time()
     
         train_loss, train_acc = train_inner_loop(model, optimizer, loss_func, train_dataloader, device=device)
         val_loss, val_acc, _, _ = test(model, loss_func, val_dataloader, device=device)
-        scheduler.step()
+        scheduler.step(val_loss)
         
         end = time.time()
         logger.info(f'|  {epoch+1:03.0f}  |   {train_loss:.5f}  |    {train_acc*100:02.0f}%    |     {val_loss:.5f}     |       {val_acc*100:02.0f}%      | {end-start:.2f}s |')
@@ -61,6 +60,7 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
         # logging to wandb
         wandb.log({"train/loss/epoch": train_loss, "train/acc/epoch": train_acc})
         wandb.log({"val/loss/epoch": val_loss, "val/acc/epoch": val_acc})
+        wandb.log({"lr": optimizer.param_groups[0]['lr']})
 
         # saving best and last checkpoint
         if val_loss < best_loss:
