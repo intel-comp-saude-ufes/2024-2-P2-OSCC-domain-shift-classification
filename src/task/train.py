@@ -22,7 +22,7 @@ from src.data import DatasetSelector
 from src.logger import logger
 
 class TrainTask:
-    def __init__(self, model_selector, optimizer_selector, loss_name, use_loss_weights, dataset, epochs, batch_size, k_folds, save_path, device):
+    def __init__(self, model_selector, optimizer_selector, loss_name, use_loss_weights, dataset, epochs, batch_size, k_folds, save_path, device, project_name="ia_health"):
         self.model_selector = model_selector
         self.optimizer_selector = optimizer_selector
         self.loss_name = loss_name
@@ -33,8 +33,30 @@ class TrainTask:
         self.k_folds = k_folds
         self.save_path = save_path
         self.device = device
+        self.project_name = project_name
         self.save_results_path = None
 
+        self._init_wandb()
+
+    def _init_wandb(self):
+        config_dict = dict(
+            model=self.model_selector.model_name,
+            optimizer=self.optimizer_selector.optimizer_name,
+            scheduler=self.optimizer_selector.scheduler_name,
+            criterion=self.loss_name,
+            learning_rate=self.optimizer_selector.learning_rate,
+        )
+
+        config_dict["optimization_kwargs"] = self.optimizer_selector.kwargs
+
+        wandb_kwargs = dict(
+            project=self.project_name,
+            name="testing functions",
+            config=config_dict
+        )
+
+        wandb.init(**wandb_kwargs) 
+                        
     def _make_save_dir(self):
         count = 1
         while True:
@@ -91,10 +113,9 @@ class TrainTask:
 
             if self.use_loss_weights:
                 class_weights = compute_class_weight('balanced', classes=np.array([0, 1]), y=train_dataset.labels)
-                class_weights = torch.tensor(class_weights)
+                class_weights = torch.tensor(class_weights, dtype=torch.float)
             
             loss_selector = LossSelector(self.loss_name, class_weights)
-            print(loss_selector)
             loss = loss_selector.get_loss()
         
             fold_dir = str(self._make_fold_save_dir(fold))
@@ -141,3 +162,7 @@ class TrainTask:
             # save predictions
             preds_true_df = pd.DataFrame(preds_true)
             preds_true_df.to_csv(fold_dir / "preds_true.csv", index=False)
+
+            #wandb table
+            table = wandb.Table(data=preds_true_df)
+            wandb.log({f"preds_true/fold{fold}": table})
