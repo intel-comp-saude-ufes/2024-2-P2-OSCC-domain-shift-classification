@@ -12,8 +12,8 @@ class DatasetInterface:
         self.path = path
         self.k_folds = k_folds
         self.train_size = train_size
-        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
-        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
+        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage()])
+        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage()])
         self.labels_names = dict()
         self.train_dataset = None
         self.test_dataset = None

@@ -16,8 +16,8 @@ class ImageNDBDataset(DatasetInterface):
     def __init__(self, path, metadata_path, train_size=0.8, train_transform=None, test_transform=None):
         self.images_path = path
         self.metadata_path = metadata_path
-        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
-        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
+        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage()])
+        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage()])
         self.train_size = train_size
         self.labels_names = {0: 'noncarcinoma', 1: 'carcinoma'}
         self.train, self.test = self._train_test_split()
