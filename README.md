@@ -1,6 +1,7 @@
 # Oral Squamous Cell Carcinoma Domain Shift Classification
 
-This study was done using Python >3.11.9, please guarantee python version before running anyy scripts in order to guarantee compatibility.
+This study was done using Python >3.11.9, please guarantee python version before running anyy scripts in order to guarantee compatibility. Research was done for the class of Computational Intelligence in Health.  
+Medical data takes years to collect and curate, and ideally models trained in these datasets shouldn't be used exclusively for this domain specifically. In the same laboratory, equipements can also be change, technique as well, so ideally the model needs to be able perfome well in domain shifts. Also, ideally public datasets can be used as base for problems for other labs and hospitals, not being restricted to its source. With this in mind, our goal is to see if training with weights from a previously trained model with histopathology images (transfer learning) increases the perfomance of the model. We will be using as base the setup found in [Beatriz Matias Santana Maia, Maria Clara Falcão Ribeiro de Assis, Leandro Muniz de Lima, Matheus Becali Rocha, Humberto Giuri Calente, Maria Luiza Armini Correa, Danielle Resende Camisasca, Renato Antonio Krohling, Transformers, convolutional neural networks, and few-shot learning for classification of histopathological images of oral cancer, Expert Systems with Applications, Volume 241, 2024, 122418, ISSN 0957-4174, https://doi.org/10.1016/j.eswa.2023.122418](https://www.sciencedirect.com/science/article/pii/S0957417423029202).
 
 ## 📥 Downloading data
 
@@ -91,7 +92,6 @@ The
 2. Research about SOTA image classifiers
 3. Research about domain shift applied to histopathology images
 4. Research about OSCC image classification
-5. Research about image processing applied to histopathology images
 
 ### Experimental phase
 
@@ -123,4 +123,4 @@ Part 4 <br>
 
 ## References
 
-
+1. [Stacke K, Eilertsen G, Unger J, Lundstrom C. Measuring Domain Shift for Deep Learning in Histopathology. IEEE J Biomed Health Inform. 2021 Feb;25(2):325-336. doi: 10.1109/JBHI.2020.3032060. Epub 2021 Feb 5. PMID: 33085623.](https://pubmed.ncbi.nlm.nih.gov/33085623/)
