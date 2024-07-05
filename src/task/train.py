@@ -76,7 +76,6 @@ class TrainTask:
 
     def run(self):
         model = self.model_selector.get_model()
-        print(self.dataset)
 
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
@@ -95,13 +94,14 @@ class TrainTask:
 
         # save fold results
         folds_paths_df = self.dataset.folds_df
-        print(self.dataset)
         folds_paths_df.to_csv(self.save_results_path / "folds_paths.csv", index=False)
 
         test_dataset = self.dataset.test_dataset
         test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
 
         for fold in range(self.k_folds):
+            logger.info(f"Training model for fold {fold}")
+            logger.info('------------------------------------------------------------------------------')
             model = copy.deepcopy(self.model_selector.get_model())
             train_dataset, val_dataset = self.dataset.get_k_fold_train_val_tuple(fold)
             train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
@@ -118,8 +118,9 @@ class TrainTask:
             loss_selector = LossSelector(self.loss_name, class_weights)
             loss = loss_selector.get_loss()
         
-            fold_dir = str(self._make_fold_save_dir(fold))
+            fold_dir = self._make_fold_save_dir(fold)
             train_losses, train_accs, vals_losses, vals_accs = train(model, optimizer, scheduler, loss, train_loader, val_loader, fold_dir, self.epochs, self.device)
+            logger.info('------------------------------------------------------------------------------')
             
             # save fold results
             fold_results = {
@@ -140,6 +141,12 @@ class TrainTask:
             f1_score_val = f1_score(y_true, y_pred)
             accuracy_score_val = accuracy_score(y_true, y_pred)
 
+            logger.info(f"Test loss: {test_loss} for fold {fold}")
+            logger.info(f"Recall score: {recall_score_val} for fold {fold}")
+            logger.info(f"Precision score: {precision_score_val} for fold {fold}")
+            logger.info(f"F1 score: {f1_score_val} for fold {fold}")
+            logger.info(f"Accuracy score: {accuracy_score_val} for fold {fold}")
+            
             wandb.log({f"test/loss/fold{fold}": test_loss, f"test/recall/fold{fold}": recall_score_val, f"test/precision/fold{fold}": precision_score_val, f"test/f1/fold{fold}": f1_score_val, f"test/accuracy/fold{fold}": accuracy_score_val})
 
             results = {
