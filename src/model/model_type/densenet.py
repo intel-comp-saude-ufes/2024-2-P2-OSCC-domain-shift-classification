@@ -10,8 +10,7 @@ class DenseNet121:
     DenseNet121 model from torchvision, with the classifier layer changed to the number of classes in the dataset and the weights loaded from the default weights or a custom path.
     """
     def __init__(self, num_classes=2, weights='default', device='auto') -> None:
-        self.model = self._load_model(weights)
-        self.model.classifier = nn.Linear(self.model.classifier.in_features, num_classes)
+        self.model = self._load_model(weights, num_classes)
         self.features = self.model.features
         self.classifier = self.model.classifier
 
@@ -25,18 +24,21 @@ class DenseNet121:
         else:
             self.model.to(self.device)
     
-    def _load_model(self, weights):
+    def _load_model(self, weights, num_classes):
         """
         Load the DenseNet121 model from torchvision with the weights from the default or a custom path.
         """
         if weights == 'default':
-            return models.densenet121(weights='IMAGENET1K_V1')
+            model = models.densenet121(weights='IMAGENET1K_V1')
+            model.classifier = nn.Linear(model.classifier.in_features, num_classes)
         else:
             if not os.path.exists(weights):
                 raise FileNotFoundError(f"File {weights} not found")
             model = models.densenet121()
+            model.classifier = nn.Linear(model.classifier.in_features, num_classes)
+
             model.load_state_dict(torch.load(weights))
-            return model
+        return model
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
