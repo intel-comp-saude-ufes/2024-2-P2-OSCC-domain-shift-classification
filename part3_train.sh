@@ -1,0 +1,1 @@
+torchrun main.py --test --model_name=densenet121 --model_weights_path="best_rahman" --dataset_name=rahman --dataset_path="data/" --train_size=0.8 --k_folds=5 --batch_size=32 --model_weights_path="best_p_ndb"

@@ -1,0 +1,1 @@
+torchrun main.py --train --optimizer_name=sgd --learning_rate=0.001 --scheduler_name=reduce_lr_on_plateau --mode=min --factor=0.1 --patience=10 --min_lr=0.000001 --loss_name=cross_entropy --use_weights_loss --dataset_name=rahman --dataset_path="data/rahman" --train_size=0.8 --k_folds=5 --model_name=densenet121 --epochs=200 --batch_size=32 --use_
