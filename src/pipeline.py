@@ -6,16 +6,19 @@ import wandb
 import pathlib as pl
 
 from src.logger import logger
+from src.early_stopper import EarlyStopper
 
 def train_inner_loop(model, optimizer, loss_func, train_dataloader, device='cpu'):
     model.train()
     running_loss = 0
     pred_list, target_list = [], []
+    counter = 0
 
-    for i, (targets, labels) in enumerate(train_dataloader): 
+    for i, (targets, labels) in enumerate(train_dataloader):
         targets, labels = targets.to(device), labels.to(device)
-        
-        outputs = model(targets).to(device)
+
+        outputs = model(targets)
+
         loss = loss_func(outputs, labels)
         running_loss += loss.item()
 
@@ -24,32 +27,36 @@ def train_inner_loop(model, optimizer, loss_func, train_dataloader, device='cpu'
         target_list.append(labels.cpu().numpy())
         running_accuracy = (pred == labels).sum().item() / len(labels)
 
-        wandb.log({"train/loss/step": loss.item(), "train/acc/step": running_accuracy})
+        #wandb.log({"train/loss/step": loss.item(), "train/acc/step": running_accuracy})
         
         optimizer.zero_grad()
         loss.backward()
-        optimizer.step()    
+        optimizer.step()
+        counter += 1
         
     # joining all the predictions and targets and flattening them
     pred_list  = np.concatenate(pred_list).ravel()
     target_list  = np.concatenate(target_list).ravel()
 
     train_acc = np.mean(pred_list == target_list)
-    train_loss = running_loss / len(pred_list)
+    train_loss = running_loss / counter
 
     return train_loss, train_acc
 
-def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataloader, saving_path, num_epoch=200, device='cpu'):
+def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataloader, saving_path, num_epoch=200, device='cpu',fold=0):
     checkpoint_name = pl.Path(saving_path) / "last_checkpoint.pth"
 
     model.train()
     train_accs, train_losses = [], []
     vals_accs, vals_losses = [], []
     best_loss = np.inf
+    early_stopper = EarlyStopper(patience=10, min_delta=0.0001)
+    
     logger.info('| Epoch | Train Loss | Train Acc | Validation Loss | Validation Acc |  Time  |')
     for epoch in range(num_epoch):
+        wandb.log({f"fold{fold}/Epoch":epoch})
         start = time.time()
-    
+        
         train_loss, train_acc = train_inner_loop(model, optimizer, loss_func, train_dataloader, device=device)
         val_loss, val_acc, _, _ = test(model, loss_func, val_dataloader, device=device)
         scheduler.step(val_loss)
@@ -58,9 +65,9 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
         logger.info(f'|  {epoch+1:03.0f}  |   {train_loss:.5f}  |    {train_acc*100:02.0f}%    |     {val_loss:.5f}     |       {val_acc*100:02.0f}%      | {end-start:.2f}s |')
         
         # logging to wandb
-        wandb.log({"train/loss/epoch": train_loss, "train/acc/epoch": train_acc})
-        wandb.log({"val/loss/epoch": val_loss, "val/acc/epoch": val_acc})
-        wandb.log({"lr": optimizer.param_groups[0]['lr']})
+        wandb.log({f"fold{fold}/train/loss/epoch": train_loss, f"fold{fold}/train/acc/epoch": train_acc})
+        wandb.log({f"fold{fold}/val/loss/epoch": val_loss, f"fold{fold}/val/acc/epoch": val_acc})
+        wandb.log({f"fold{fold}/lr": optimizer.param_groups[0]['lr']})
 
         # saving best and last checkpoint
         if val_loss < best_loss:
@@ -73,6 +80,9 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
         train_losses.append(train_loss)
         vals_accs.append(val_acc)
         vals_losses.append(val_loss)
+
+        if early_stopper.early_stop(val_loss):             
+            break
         
     return train_losses, train_accs, vals_losses, vals_accs
 
@@ -81,7 +91,7 @@ def test(model, loss_func, dataloader, device='cpu'):
     with torch.no_grad():
         running_loss = 0
         pred_list, target_list = [], []
-
+        counter = 0
         for target, labels in dataloader:
             target, labels = target.to(device), labels.to(device)
 
@@ -95,11 +105,13 @@ def test(model, loss_func, dataloader, device='cpu'):
             pred_list.append(pred.cpu().numpy())
             target_list.append(labels.cpu().numpy())
 
+            counter += 1
+
         pred_list  = np.concatenate(pred_list).ravel()
         target_list  = np.concatenate(target_list).ravel()
 
         acc = np.mean(pred_list == target_list)
-        loss = running_loss / len(pred_list)
+        loss = running_loss / counter
 
         return loss, acc, pred_list, target_list
         

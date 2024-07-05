@@ -21,8 +21,14 @@ class PatchDataset(DatasetInterface):
         self.path = path
         self.k_folds = k_folds
         self.train_size = train_size
-        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage()])
-        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage()])
+        
+        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToTensor(),
+                                                                                               v2.Resize((512,512)),
+                                                                                               v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
+        
+        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToTensor(),
+                                                                                             v2.Resize((512,512)),
+                                                                                             v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
         self.labels_names = {0: 'noncarcinoma', 1: 'carcinoma'}
         self.train, self.test = self._train_test_split()
 

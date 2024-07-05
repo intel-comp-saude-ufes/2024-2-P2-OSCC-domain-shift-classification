@@ -21,8 +21,8 @@ class RahmanDataset(DatasetInterface):
         self.path = path
         self.k_folds = k_folds
         self.train_size = train_size
-        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage()])
-        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage()])
+        self.train_transform = train_transform if train_transform is not None else v2.Compose([v2.ToImage(),v2.Resize((512,512))])
+        self.test_transform = test_transform if train_transform is not None else v2.Compose([v2.ToImage(),v2.Resize((512,512))])
         self.labels_names = {0: 'noncarcinoma', 1: 'carcinoma'}
         self.train, self.test = self._train_test_split()
 

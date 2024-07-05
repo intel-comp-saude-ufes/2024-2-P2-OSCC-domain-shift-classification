@@ -22,7 +22,7 @@ from src.data import DatasetSelector
 from src.logger import logger
 
 class TrainTask:
-    def __init__(self, model_selector, optimizer_selector, loss_name, use_loss_weights, dataset, epochs, batch_size, k_folds, save_path, device, project_name="ia_health"):
+    def __init__(self, model_selector, optimizer_selector, loss_name, use_loss_weights, dataset, epochs, batch_size, k_folds, save_path, device, project_name="ia_health",run_name="Experiment"):
         self.model_selector = model_selector
         self.optimizer_selector = optimizer_selector
         self.loss_name = loss_name
@@ -35,6 +35,7 @@ class TrainTask:
         self.device = device
         self.project_name = project_name
         self.save_results_path = None
+        self.run_name = run_name
 
         self._init_wandb()
 
@@ -51,7 +52,7 @@ class TrainTask:
 
         wandb_kwargs = dict(
             project=self.project_name,
-            name="testing functions",
+            name=self.run_name,
             config=config_dict
         )
 
@@ -106,20 +107,22 @@ class TrainTask:
             train_dataset, val_dataset = self.dataset.get_k_fold_train_val_tuple(fold)
             train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
             val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
-
+            
             optimizer_selector = copy.deepcopy(self.optimizer_selector)
             optimizer = optimizer_selector.get_optimizer(model.parameters())
             scheduler = optimizer_selector.get_scheduler()
 
             if self.use_loss_weights:
                 class_weights = compute_class_weight('balanced', classes=np.array([0, 1]), y=train_dataset.labels)
-                class_weights = torch.tensor(class_weights, dtype=torch.float)
+                class_weights = torch.tensor(class_weights, dtype=torch.float).to(self.device)
+                loss_selector = LossSelector(self.loss_name, class_weights)
+            else:
+                loss_selector = LossSelector(self.loss_name)
             
-            loss_selector = LossSelector(self.loss_name, class_weights)
             loss = loss_selector.get_loss()
         
             fold_dir = self._make_fold_save_dir(fold)
-            train_losses, train_accs, vals_losses, vals_accs = train(model, optimizer, scheduler, loss, train_loader, val_loader, fold_dir, self.epochs, self.device)
+            train_losses, train_accs, vals_losses, vals_accs = train(model, optimizer, scheduler, loss, train_loader, val_loader, fold_dir, self.epochs, self.device,fold)
             logger.info('------------------------------------------------------------------------------')
             
             # save fold results
@@ -134,6 +137,9 @@ class TrainTask:
             fold_results_df.to_csv(fold_dir / "fold_results.csv", index=False)
 
             # test model
+            PATH_MODEL = fold_dir / "best_checkpoint.pth"
+            model.load_state_dict(torch.load(PATH_MODEL))
+            
             test_loss, _, y_pred, y_true = test(model, loss, test_loader, self.device)
 
             recall_score_val = recall_score(y_true, y_pred)
@@ -147,7 +153,7 @@ class TrainTask:
             logger.info(f"F1 score: {f1_score_val} for fold {fold*100:0.4f}%")
             logger.info(f"Accuracy score: {accuracy_score_val} for fold {fold*100:0.4f}%")
 
-            wandb.log({f"test/loss/fold{fold}": test_loss, f"test/recall/fold{fold}": recall_score_val, f"test/precision/fold{fold}": precision_score_val, f"test/f1/fold{fold}": f1_score_val, f"test/accuracy/fold{fold}": accuracy_score_val})
+            wandb.log({f"fold{fold}/test/loss": test_loss, f"fold{fold}/test/recall": recall_score_val, f"fold{fold}/test/precision": precision_score_val, f"fold{fold}/test/f1": f1_score_val, f"fold{fold}/test/accuracy": accuracy_score_val})
 
             results = {
                 "test_loss": test_loss,
@@ -172,4 +178,4 @@ class TrainTask:
 
             #wandb table
             table = wandb.Table(data=preds_true_df)
-            wandb.log({f"preds_true/fold{fold}": table})
+            wandb.log({f"fold{fold}/preds_true": table})

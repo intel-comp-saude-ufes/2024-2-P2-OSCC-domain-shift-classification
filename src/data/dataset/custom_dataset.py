@@ -28,5 +28,6 @@ class CustomDataset(torch.utils.data.Dataset):
 
         if image.max() > 1:
             image = image / 255.0
-        return image, labels
+        
+        return image, int(labels)
         
