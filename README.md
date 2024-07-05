@@ -30,6 +30,25 @@ data
 |     |      |    |-- image.png
 |     |      |    |-- ....png
 |     |---- ndb-ufes.csv
+|---- rahman
+|     |---- First Set
+|     |      |-- 100x Normal Oral Cavity Histopathological Images
+|     |      |    |-- image.jpg
+|     |      |    |-- image.jpg
+|     |      |    |-- ....jpg
+|     |      |-- 100x OSCC Histopathological Images
+|     |      |    |-- image.jpg
+|     |      |    |-- image.jpg
+|     |      |    |-- ....jpg
+|     |---- Second Set
+|     |      |-- 400x Normal Oral Cavity Histopathological Images
+|     |      |    |-- image.jpg
+|     |      |    |-- image.jpg
+|     |      |    |-- ....jpg
+|     |      |-- 400x OSCC Histopathological Images
+|     |      |    |-- image.jpg
+|     |      |    |-- image.jpg
+|     |      |    |-- ....jpg
 ```
 
 The dataset used for test was [Histopathological imaging database for Oral Cancer analysis](https://data.mendeley.com/datasets/ftmp4cvtmb/2), curated by Tabassum Yesmin Rahman, Lipi B. Mahanta, Anup K. Das, Jagannath D. Sarma. Published in January 9, 2023. Mendeley Data, V1, doi: 10.17632/ftmp4cvtmb.2
@@ -62,6 +81,8 @@ PyTorch was used in this project. While it's included in the requirements, I rec
 ```sh
 pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
 ```
+
+The
 ## Chapters
 
 ### Research phase
