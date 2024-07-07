@@ -4,6 +4,8 @@ import torch
 
 import os
 
+from src.logger import logger
+
 class DenseNet121:
     name = 'densenet121'
     """
@@ -35,9 +37,15 @@ class DenseNet121:
             if not os.path.exists(weights):
                 raise FileNotFoundError(f"File {weights} not found")
             model = models.densenet121()
+            state_dict = torch.load(weights)
+            state_dict_num_classes = state_dict['classifier.bias'].shape[0]
+
+            logger.info(f"Changing the number of classes to {state_dict_num_classes}")
+            model.classifier = nn.Linear(model.classifier.in_features, state_dict_num_classes)
+            
+            model.load_state_dict(state_dict)
             model.classifier = nn.Linear(model.classifier.in_features, num_classes)
 
-            model.load_state_dict(torch.load(weights))
         return model
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
