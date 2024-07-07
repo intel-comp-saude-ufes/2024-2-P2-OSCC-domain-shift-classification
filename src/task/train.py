@@ -110,7 +110,7 @@ class TrainTask:
             scheduler = optimizer_selector.get_scheduler()
 
             if self.use_loss_weights:
-                class_weights = compute_class_weight('balanced', classes=np.array([0, 1]), y=train_dataset.labels)
+                class_weights = compute_class_weight('balanced', classes=np.array(list(self.dataset.labels_names.keys())), y=train_dataset.labels)
                 class_weights = torch.tensor(class_weights, dtype=torch.float).to(self.device)
                 loss_selector = LossSelector(self.loss_name, class_weights)
             else:

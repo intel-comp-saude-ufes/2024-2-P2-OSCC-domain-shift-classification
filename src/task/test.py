@@ -84,7 +84,7 @@ class TestTask:
         test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
 
         if self.use_loss_weights:
-                class_weights = compute_class_weight('balanced', classes=np.array([0, 1]), y=test.labels)
+                class_weights = compute_class_weight('balanced', classes=np.array(list(self.dataset.labels_names.keys())), y=test.labels)
                 class_weights = torch.tensor(class_weights, dtype=torch.float).to(self.device)
                 loss_selector = LossSelector(self.loss_name, class_weights)
         else:
