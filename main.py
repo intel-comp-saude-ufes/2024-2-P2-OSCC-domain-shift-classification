@@ -7,7 +7,7 @@ from click_params import DecimalRange
 import torch
 
 from src.logger import logger
-from src.task.train import TrainTask
+from src.task import TrainTask, TestTask
 from src.model import ModelSelector
 from src.optimization import OptimizationSelector
 from src.data import DatasetSelector
@@ -74,7 +74,9 @@ def main(train, test, optimizer_name, learning_rate, scheduler_name, step_size, 
         train_task = TrainTask(model_selector, optimization_selector, loss_name, use_weights_loss, dataset, epochs, batch_size, k_folds, save_path, device, project_name, run_name)
         train_task.run()
     elif test:
-        print("testing")
+        logger.info(f"Testing model {model_name} with dataset {dataset_name}")
+        test_task = TestTask(model_selector, loss_name, use_weights_loss, dataset, batch_size, k_folds, save_path, device, project_name, run_name)
+        test_task.run()
     else:
         raise ValueError("You must use --train or --test flag")
     
