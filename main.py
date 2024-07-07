@@ -19,7 +19,7 @@ METADATA_PATH = pl.Path(os.path.abspath("")) / pl.Path('data') / pl.Path('ndb_uf
 @click.command()
 @click.option("--train", is_flag=True, help="Train flag. When used along with test prevails over test flag", default=False)
 @click.option("--test", is_flag=True, help="Test flag. When used along with train, train prevails.", default=False)
-@click.option("--optimizer_name", default="sgd", help="Optimizer name", type=click.Choice(["adam", "sgd"]), show_default=True)
+@click.option("--optimizer_name", default="sgd", help="Optimizer name", type=click.Choice(["adam", "sgd","adabelief"]), show_default=True)
 @click.option("--learning_rate", default=0.001, help="Learning rate", type=float, show_default=True)
 @click.option("--scheduler_name", default="reduce_lr_on_plateau", help="Scheduler name", type=click.Choice(["step_lr", "reduce_lr_on_plateau"]), show_default=True)
 @click.option("--step_size", default=30, help="Step size for StepLR scheduler", type=int, show_default=True)

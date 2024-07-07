@@ -1,5 +1,6 @@
 from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
+from adabelief_pytorch import AdaBelief
 
 class OptimizationSelector:
     def __init__(self, optimizer_name, scheduler_name, learning_rate, **kwargs):
@@ -16,6 +17,8 @@ class OptimizationSelector:
             self.optimizer = Adam(model_parameters, lr=self.learning_rate)
         elif self.optimizer_name == 'sgd':
             self.optimizer = SGD(model_parameters, lr=self.learning_rate)
+        elif self.optimizer_name == 'adabelief':
+            self.optimizer = AdaBelief(model_parameters, lr=1e-3, eps=1e-8, weight_decay=1e-2, betas=(0.9,0.999), weight_decouple = True, rectify = False)
         else:
             raise ValueError('Invalid optimization name')
         
