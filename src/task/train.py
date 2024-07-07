@@ -144,11 +144,11 @@ class TrainTask:
             f1_score_val = f1_score(y_true, y_pred)
             accuracy_score_val = accuracy_score(y_true, y_pred)
 
-            logger.info(f"Test loss: {test_loss} for fold {fold:0.4f}")
-            logger.info(f"Recall score: {recall_score_val} for fold {fold*100:0.4f}%")
-            logger.info(f"Precision score: {precision_score_val} for fold {fold*100:0.4f}%")
-            logger.info(f"F1 score: {f1_score_val} for fold {fold*100:0.4f}%")
-            logger.info(f"Accuracy score: {accuracy_score_val} for fold {fold*100:0.4f}%")
+            logger.info(f"Test loss: {test_loss} for fold {fold}")
+            logger.info(f"Recall score: {recall_score_val*100:0.4f}% for fold {fold}")
+            logger.info(f"Precision score: {precision_score_val*100:0.4f}% for fold {fold}")
+            logger.info(f"F1 score: {f1_score_val*100:0.4f}% for fold {fold}")
+            logger.info(f"Accuracy score: {accuracy_score_val*100:0.4f}% for fold {fold}")
 
             wandb.log({f"fold{fold}/test/loss": test_loss, f"fold{fold}/test/recall": recall_score_val, f"fold{fold}/test/precision": precision_score_val, f"fold{fold}/test/f1": f1_score_val, f"fold{fold}/test/accuracy": accuracy_score_val})
 
