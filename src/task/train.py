@@ -59,7 +59,7 @@ class TrainTask:
         count = 1
         while True:
             save_dir = f"{self.model_selector.model_name}_{self.optimizer_selector.optimizer_name}_{self.dataset.name}_{count}"
-            save_dir_path = pl.Path(self.save_path) / pl.Path(save_dir)
+            save_dir_path = pl.Path(self.save_path) / pl.Path("train") / pl.Path(save_dir)
             if not os.path.exists(save_dir_path):
                 os.makedirs(save_dir_path)
                 logger.info(f"Created directory to {save_dir_path}")
@@ -139,9 +139,9 @@ class TrainTask:
             
             test_loss, _, y_pred, y_true = test(model, loss, test_loader, self.device)
 
-            recall_score_val = recall_score(y_true, y_pred)
-            precision_score_val = precision_score(y_true, y_pred)
-            f1_score_val = f1_score(y_true, y_pred)
+            recall_score_val = recall_score(y_true, y_pred, average='weighted')
+            precision_score_val = precision_score(y_true, y_pred, average='weighted')
+            f1_score_val = f1_score(y_true, y_pred, average='weighted')
             accuracy_score_val = accuracy_score(y_true, y_pred)
 
             logger.info(f"Test loss: {test_loss} for fold {fold}")
