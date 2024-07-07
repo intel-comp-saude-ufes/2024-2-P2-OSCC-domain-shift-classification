@@ -70,7 +70,7 @@ class TestTask:
 
         # make saving dir with format model_name_optimizer_name_dataset_day_month_year
         save_dir = f"{self.model_selector.model_name}_{self.dataset.name}"
-        save_dir_path = pl.Path(self.save_path) / pl.Path(save_dir)
+        save_dir_path = pl.Path(self.save_path) / pl.Path("test") / pl.Path(save_dir)
         if not os.path.exists(save_dir_path):
             os.makedirs(save_dir_path)
             self.save_results_path = save_dir_path
