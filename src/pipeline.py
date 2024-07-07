@@ -50,7 +50,7 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
     train_accs, train_losses = [], []
     vals_accs, vals_losses = [], []
     best_loss = np.inf
-    early_stopper = EarlyStopper(patience=10, min_delta=0.0001)
+    early_stopper = EarlyStopper(patience=20, min_delta=0.0001)
     
     logger.info('| Epoch | Train Loss | Train Acc | Validation Loss | Validation Acc |  Time  |')
     for epoch in range(num_epoch):

@@ -1,5 +1,6 @@
 import torch
 from PIL import Image
+import cv2
 
 import os
 
@@ -20,14 +21,15 @@ class CustomDataset(torch.utils.data.Dataset):
             raise FileNotFoundError(f"File {self.image_paths[idx]} not found")
             
         image = Image.open(self.image_paths[idx]).convert("RGB")
-        if image.size[1] > image.size[0]:
-            image = image.rotate(90, Image.NEAREST, expand=1)
-        image = self.transform(image)
+        #if image.size[1] > image.size[0]:
+            #image = image.rotate(90, Image.NEAREST, expand=1)
         
+        image = self.transform(image)
+
         labels = self.labels[idx]
 
-        if image.max() > 1:
-            image = image / 255.0
+        #if image.max() > 1:
+            #image = image / 255.0
         
         return image, int(labels)
         
