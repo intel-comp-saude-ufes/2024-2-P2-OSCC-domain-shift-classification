@@ -4,6 +4,7 @@ from torchvision.transforms import v2
 from src.data.dataset.custom_dataset import CustomDataset
 
 class DatasetInterface:
+    name = None
     """
     Dataset for patches images. Arranges the patches in train and test sets considering the parent image (prefix of the image name). It has a train and test dataset that can be accessed by the attributes train_dataset and test_dataset.
     These datasets can be used in the DataLoader class from PyTorch.
