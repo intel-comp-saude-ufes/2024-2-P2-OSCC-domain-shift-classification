@@ -80,13 +80,12 @@ class TestTask:
             self._make_save_dir()
 
         test_dataset = self.dataset.test_dataset
-        print(self.dataset.labels_names)
-        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
-
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)      
+  
         if self.use_loss_weights:
-                class_weights = compute_class_weight('balanced', classes=np.array(list(self.dataset.labels_names.keys())), y=test.labels)
-                class_weights = torch.tensor(class_weights, dtype=torch.float).to(self.device)
-                loss_selector = LossSelector(self.loss_name, class_weights)
+            class_weights = compute_class_weight('balanced', classes=np.array(list(self.dataset.labels_names.keys())), y=test_dataset.labels)
+            class_weights = torch.tensor(class_weights, dtype=torch.float).to(self.device)
+            loss_selector = LossSelector(self.loss_name, class_weights)
         else:
             loss_selector = LossSelector(self.loss_name)
         
