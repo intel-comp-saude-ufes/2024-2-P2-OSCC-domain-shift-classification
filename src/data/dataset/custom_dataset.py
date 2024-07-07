@@ -20,16 +20,9 @@ class CustomDataset(torch.utils.data.Dataset):
         if not os.path.exists(self.image_paths[idx]):
             raise FileNotFoundError(f"File {self.image_paths[idx]} not found")
             
-        image = Image.open(self.image_paths[idx]).convert("RGB")
-        #if image.size[1] > image.size[0]:
-            #image = image.rotate(90, Image.NEAREST, expand=1)
-        
+        image = Image.open(self.image_paths[idx]).convert("RGB")        
         image = self.transform(image)
 
         labels = self.labels[idx]
-
-        #if image.max() > 1:
-            #image = image / 255.0
-        
         return image, int(labels)
         
