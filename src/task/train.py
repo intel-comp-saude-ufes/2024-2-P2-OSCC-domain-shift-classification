@@ -14,10 +14,7 @@ from sklearn.utils.class_weight import compute_class_weight
 
 from src.pipeline import train, test
 
-from src.model import ModelSelector
-from src.optimization import OptimizationSelector
 from src.loss import LossSelector
-from src.data import DatasetSelector
 
 from src.logger import logger
 
