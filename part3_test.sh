@@ -1,1 +1,2 @@
-torchrun main.py --test --model_name=densenet121 --dataset_name=rahman --dataset_path="data/rahman" --train_size=0.8 --k_folds=5 --batch_size=32 --model_weights_path="best_p_ndb"
+export BEST_P_NDB="results/densenet121_sgd_patches_ndb_36/fold_0/best_checkpoint.pth"
+torchrun main.py --test --model_name=densenet121 --dataset_name=rahman --dataset_path="data/rahman" --train_size=0.8 --k_folds=5 --batch_size=32 --model_weights_path=${BEST_P_NDB}
