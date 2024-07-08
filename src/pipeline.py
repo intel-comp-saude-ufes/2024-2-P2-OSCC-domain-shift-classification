@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import pandas as pd
 import time
 
 import wandb
@@ -53,10 +54,10 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
     early_stopper = EarlyStopper(patience=20, min_delta=0.0001)
     
     logger.info('| Epoch | Train Loss | Train Acc | Validation Loss | Validation Acc |  Time  |')
+
     for epoch in range(num_epoch):
-        wandb.log({f"fold{fold}/Epoch":epoch})
         start = time.time()
-        
+
         train_loss, train_acc = train_inner_loop(model, optimizer, loss_func, train_dataloader, device=device)
         val_loss, val_acc, _, _ = test(model, loss_func, val_dataloader, device=device)
         scheduler.step(val_loss)
@@ -65,9 +66,9 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
         logger.info(f'|  {epoch+1:03.0f}  |   {train_loss:.5f}  |    {train_acc*100:02.0f}%    |     {val_loss:.5f}     |       {val_acc*100:02.0f}%      | {end-start:.2f}s |')
         
         # logging to wandb
-        wandb.log({f"fold{fold}/train/loss/epoch": train_loss, f"fold{fold}/train/acc/epoch": train_acc})
-        wandb.log({f"fold{fold}/val/loss/epoch": val_loss, f"fold{fold}/val/acc/epoch": val_acc})
-        wandb.log({f"fold{fold}/lr": optimizer.param_groups[0]['lr']})
+        wandb.log({f"fold{fold}/train/loss/epoch": train_loss, f"fold{fold}/train/acc/epoch": train_acc, 
+                   f"fold{fold}/val/loss/epoch": val_loss, f"fold{fold}/val/acc/epoch": val_acc,
+                   f"fold{fold}/lr": optimizer.param_groups[0]['lr']})
 
         # saving best and last checkpoint
         if val_loss < best_loss:
@@ -83,7 +84,31 @@ def train(model, optimizer, scheduler, loss_func, train_dataloader, val_dataload
 
         if early_stopper.early_stop(val_loss):             
             break
-        
+
+    df_loss = pd.DataFrame({"train_loss": train_losses, "val_loss": vals_losses})
+    df_acc = pd.DataFrame({"train_acc": train_accs, "val_acc": vals_accs})
+
+    table_loss = wandb.Table(dataframe=df_loss)
+    table_acc = wandb.Table(dataframe=df_acc)
+
+    wandb.log({   
+        f"fold{fold}/loss": table_loss,
+        f"fold{fold}/acc": table_acc,
+        f"fold{fold}/loss": wandb.plot.line_series(
+            xs=range(epoch),
+            ys=[train_losses, vals_losses],
+            keys=["Train loss", "Val loss"],
+            title="Train x Val loss",
+            xname="Epochs"),
+        f"folds{fold}/acc": wandb.plot.line_series(
+            xs=range(epoch),
+            ys=[train_accs, vals_accs],
+            keys=["Train accuracy", "Val accuracy"],
+            title="Train x Val accuracy",
+            xname="Epochs")
+        }
+    )
+
     return train_losses, train_accs, vals_losses, vals_accs
 
 def test(model, loss_func, dataloader, device='cpu'):
