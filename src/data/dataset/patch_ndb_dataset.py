@@ -115,7 +115,7 @@ class PatchDataset(DatasetInterface):
         labels_train = [self._create_label_from_path(image) for image in images_train]
 
         images_test = [image for image in images_patches if self._get_parent_image_name(image) in images_test]
-        labels_test = [self._create_label_from_path(image) for image in images_train]
+        labels_test = [self._create_label_from_path(image) for image in images_test]
 
         return (images_train, labels_train), (images_test, labels_test)
     
