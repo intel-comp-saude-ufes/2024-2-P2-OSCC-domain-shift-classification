@@ -52,7 +52,7 @@ class TestTask:
         count = 1
         while True:
             save_dir = f"{self.model_selector.model_name}_{self.dataset.name}_{count}"
-            save_dir_path = pl.Path(self.save_path) / pl.Path("test") / pl.Path(save_dir)
+            save_dir_path = pl.Path(self.save_path) / pl.Path(save_dir)
             if not os.path.exists(save_dir_path):
                 os.makedirs(save_dir_path)
                 logger.info(f"Created directory to {save_dir_path}")
@@ -63,14 +63,14 @@ class TestTask:
 
     def run(self):
         model = self.model_selector.get_model()
-
+        self.save_path = pl.Path(self.save_path) / pl.Path("test")
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
             logger.info(f"Created root directory to save all results {self.save_path}")
 
         # make saving dir with format model_name_optimizer_name_dataset_day_month_year
         save_dir = f"{self.model_selector.model_name}_{self.dataset.name}"
-        save_dir_path = pl.Path(self.save_path) / pl.Path("test") / pl.Path(save_dir)
+        save_dir_path = pl.Path(self.save_path) / pl.Path(save_dir)
         if not os.path.exists(save_dir_path):
             os.makedirs(save_dir_path)
             self.save_results_path = save_dir_path
@@ -116,7 +116,8 @@ class TestTask:
 
         # save metrics
         results_df = pd.DataFrame(results, index=[0])
-        results_df.to_csv(save_dir_path / "test_results.csv", index=False)
+        results_df.to_csv(self.save_results_pathsave_results_path / "test_results.csv", index=False)
+        logger.info(f"Saved test results to {self.save_results_pathsave_results_path / 'test_results.csv'}")
 
         preds_true = {
             "preds": y_pred,
@@ -125,7 +126,8 @@ class TestTask:
         
         # save predictions
         preds_true_df = pd.DataFrame(preds_true)
-        preds_true_df.to_csv(save_dir_path / "preds_true.csv", index=False)
+        preds_true_df.to_csv(self.save_results_pathsave_results_path / "preds_true.csv", index=False)
+        logger.info(f"Saved predictions to {self.save_results_pathsave_results_path / 'preds_true.csv'}")
 
         #wandb table
         table = wandb.Table(data=preds_true_df)
