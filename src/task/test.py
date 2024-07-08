@@ -116,8 +116,8 @@ class TestTask:
 
         # save metrics
         results_df = pd.DataFrame(results, index=[0])
-        results_df.to_csv(self.save_results_pathsave_results_path / "test_results.csv", index=False)
-        logger.info(f"Saved test results to {self.save_results_pathsave_results_path / 'test_results.csv'}")
+        results_df.to_csv(self.save_results_path / "test_results.csv", index=False)
+        logger.info(f"Saved test results to {self.save_results_path / 'test_results.csv'}")
 
         preds_true = {
             "preds": y_pred,
@@ -126,8 +126,8 @@ class TestTask:
         
         # save predictions
         preds_true_df = pd.DataFrame(preds_true)
-        preds_true_df.to_csv(self.save_results_pathsave_results_path / "preds_true.csv", index=False)
-        logger.info(f"Saved predictions to {self.save_results_pathsave_results_path / 'preds_true.csv'}")
+        preds_true_df.to_csv(self.save_results_path / "preds_true.csv", index=False)
+        logger.info(f"Saved predictions to {self.save_results_path / 'preds_true.csv'}")
 
         #wandb table
         table = wandb.Table(data=preds_true_df)
