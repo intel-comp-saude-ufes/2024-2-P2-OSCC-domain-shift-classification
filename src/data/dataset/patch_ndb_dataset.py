@@ -25,7 +25,8 @@ class PatchDataset(DatasetInterface):
         
         self.train_transform = train_transform if train_transform is not None else get_train_augmentation()
         self.test_transform = test_transform if train_transform is not None else get_test_augmentation()
-        self.labels_names = {0: 'no_dysplasia', 1: 'carcinoma', 2: 'with_dysplasia'}
+        #self.labels_names = {0: 'no_dysplasia', 1: 'carcinoma', 2: 'with_dysplasia'}
+        self.labels_names = {0: 'no_dysplasia', 1: 'carcinoma'}
         self.train, self.test = self._train_test_split()
 
         self.train_dataset = CustomDataset(self.train[0], self.train[1], transform=self.train_transform)
@@ -91,7 +92,8 @@ class PatchDataset(DatasetInterface):
         no_dysplasia_parent = list(set([self._get_parent_image_name(image) for image in no_dysplasia]))
         with_dysplasia_parent = list(set([self._get_parent_image_name(image) for image in with_dysplasia]))
 
-        images = list(set(carcinoma_parent).union(no_dysplasia_parent).union(with_dysplasia_parent))
+        #images = list(set(carcinoma_parent).union(no_dysplasia_parent).union(with_dysplasia_parent))
+        images = list(set(carcinoma_parent).union(no_dysplasia_parent))
         
         # create arrays of 1 and 0 for carcinoma and non-carcinoma
         carinoma_parents_len = len(set(carcinoma_parent))
@@ -102,13 +104,15 @@ class PatchDataset(DatasetInterface):
         no_dysplasia_labels = list(np.zeros(no_dysplasia_parents_len))
         with_dysplasia_labels = list(np.ones(with_dysplasia_parents_len) * 2)
 
-        labels = carcinoma_labels + no_dysplasia_labels + with_dysplasia_labels
+        #labels = carcinoma_labels + no_dysplasia_labels + with_dysplasia_labels
+        labels = carcinoma_labels + no_dysplasia_labels
 
         # split the dataset by parent name
         images_train, images_test, labels_train, labels_test = train_test_split(images, labels, train_size=self.train_size, stratify=labels, random_state=42)
         
         # get patches images
-        images_patches = carcinoma + no_dysplasia + with_dysplasia
+        #images_patches = carcinoma + no_dysplasia + with_dysplasia
+        images_patches = carcinoma + no_dysplasia
         
         images_train = [image for image in images_patches if self._get_parent_image_name(image) in images_train]
         # 0, 1, 2 for no_dysplasia, carcinoma and with_dysplasia

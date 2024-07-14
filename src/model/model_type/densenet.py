@@ -38,13 +38,14 @@ class DenseNet121:
                 raise FileNotFoundError(f"File {weights} not found")
             model = models.densenet121()
             state_dict = torch.load(weights)
-            state_dict_num_classes = state_dict['classifier.bias'].shape[0]
+            
+            state_dict_num_classes = state_dict['module.classifier.bias'].shape[0]
 
             logger.info(f"Changing the number of classes to {state_dict_num_classes}")
             model.classifier = nn.Linear(model.classifier.in_features, state_dict_num_classes)
-            
-            model.load_state_dict(state_dict)
-            model.classifier = nn.Linear(model.classifier.in_features, num_classes)
+
+            model.load_state_dict({k.replace("module.", ""): v for k, v in state_dict.items()})
+            #model.classifier = nn.Linear(model.classifier.in_features, num_classes)
 
         return model
 
