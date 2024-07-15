@@ -115,11 +115,10 @@ Part 3 <br>
 
 8. Training P-NDB-UFES model on Rahman training set (transfer learning) 100x + 400x
 9. Test P-NDB-UFES-Rahman model with Rahman test
-10. Test P-NDB-UFES-Rahman model with P-NDB-UFES test
 
 Part 4 <br>
 
-11. Analyze results
+10. Analyze results
 
 ## Run experiments
 
