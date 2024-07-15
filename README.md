@@ -1,6 +1,8 @@
 # Oral Squamous Cell Carcinoma Domain Shift Classification
 
-This study was done using Python >3.11.9, please guarantee python version before running anyy scripts in order to guarantee compatibility. Research was done for the class of Computational Intelligence in Health.  
+This study was done using Python >3.11.9, please guarantee python version before running anyy scripts in order to guarantee compatibility. Research was done for the class of Computational Intelligence in Health. A summarized presenation of our results can be found [in this youtube video](https://youtu.be/dNONtYUO_Eg).
+
+
 Medical data takes years to collect and curate, and ideally models trained in these datasets shouldn't be used exclusively for this domain specifically. In the same laboratory, equipements can also be change, technique as well, so ideally the model needs to be able perfome well in domain shifts. Also, ideally public datasets can be used as base for problems for other labs and hospitals, not being restricted to its source. With this in mind, our goal is to see if training with weights from a previously trained model with histopathology images (transfer learning) increases the perfomance of the model. We will be using as base the setup found in [Beatriz Matias Santana Maia, Maria Clara Falcão Ribeiro de Assis, Leandro Muniz de Lima, Matheus Becali Rocha, Humberto Giuri Calente, Maria Luiza Armini Correa, Danielle Resende Camisasca, Renato Antonio Krohling, Transformers, convolutional neural networks, and few-shot learning for classification of histopathological images of oral cancer, Expert Systems with Applications, Volume 241, 2024, 122418, ISSN 0957-4174, https://doi.org/10.1016/j.eswa.2023.122418](https://www.sciencedirect.com/science/article/pii/S0957417423029202).
 
 ## 📥 Downloading data
