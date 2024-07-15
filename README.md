@@ -83,7 +83,6 @@ PyTorch was used in this project. While it's included in the requirements, I rec
 pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
 ```
 
-The
 ## Chapters
 
 ### Research phase
@@ -120,6 +119,37 @@ Part 4 <br>
 
 11. Analyze results
 
+## Run experiments
+
+```sh
+sh part1_train.sh
+```
+
+Then you have to change part2_train.sh variables to your best model.
+
+```sh
+sh part2_test.sh
+```
+
+Then you have to change part3_train.sh variables to your best model.
+
+```sh
+sh part3_train.sh
+```
+
+Then you have to change part3_test.sh variables to your best model.
+
+```sh
+sh part3_test.sh
+```
+
+## Authors
+
+<ul>
+ <li>Beatriz Matias Santana Maia</li>
+ <li>Vitor Bonella</li>
+ <li>Higor David Oliveira</li>
+</ul>
 
 ## References
 
